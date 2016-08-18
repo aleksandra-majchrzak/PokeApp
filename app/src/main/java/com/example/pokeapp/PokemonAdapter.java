@@ -58,7 +58,7 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
 
         String[] parts = url.split("/");
 
-        if(pokemon.sprites == null || pokemon.sprites.isEmpty()){
+        if(pokemon.sprites == null || pokemon.sprites.isEmpty() || pokemon.image == null){
 
             pokeService.getPokemon(Integer.valueOf(parts[parts.length -1])).enqueue(new Callback<Pokemon>() {
                 @Override
@@ -69,6 +69,10 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
                         pokemon.clone(response.body());
 
                         holder.pokemonType.setText(pokemon.getPokemonTypes());
+                        holder.pokemonHeight.setText(String.valueOf(pokemon.height));
+                        holder.pokemonWeight.setText(String.valueOf(pokemon.weight));
+
+
                         new LoadPokemonData(holder.pokemonImage, pokemon).execute(response.body().getDefaultImsgeUrl());
                     } else {
                         Log.e(TAG, "Response null or empty.");
@@ -78,7 +82,7 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
 
                 @Override
                 public void onFailure(Call<Pokemon> call, Throwable t) {
-                    Log.e(TAG, "Service error.");
+                    Log.e(TAG, "Service error. "+t.getLocalizedMessage());
                 }
             });
 
@@ -102,6 +106,8 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
         ImageView pokemonImage;
         TextView pokemonName;
         TextView pokemonType;
+        TextView pokemonHeight;
+        TextView pokemonWeight;
 
         public PokemonViewHolder(View itemView) {
             super(itemView);
@@ -109,6 +115,8 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
             pokemonImage = ((ImageView)itemView.findViewById(R.id.pokemon_imageView));
             pokemonName = (TextView) itemView.findViewById(R.id.pokemon_name_textView);
             pokemonType = (TextView) itemView.findViewById(R.id.poke_type_textView);
+            pokemonHeight = (TextView) itemView.findViewById(R.id.poke_height_textView);
+            pokemonWeight = (TextView) itemView.findViewById(R.id.poke_weight_textView);
         }
     }
 

@@ -7,6 +7,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -71,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call<PokeResponse> call, Throwable t) {
                 Log.e(TAG, "Service error.");
+                Toast.makeText(MainActivity.this, "Error connecting with network.", Toast.LENGTH_LONG).show();
             }
         });
     }
