@@ -90,4 +90,8 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
         }
     }
 
+    public List<Pokemon> getPokemons(){
+        return pokemonList;
+    }
+
 }

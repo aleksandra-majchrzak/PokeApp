@@ -3,6 +3,7 @@ package com.example.pokeapp;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -13,6 +14,12 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import org.json.JSONArray;
+
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -52,6 +59,16 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 prepare();
+            }
+        });
+
+        findViewById(R.id.json_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                List<Pokemon> list = ((PokemonAdapter)recyclerView.getAdapter()).getPokemons();
+                for(Pokemon pokemon : list)
+                    pokemon.image = null;
+                parseToJson(list);
             }
         });
 
@@ -175,5 +192,25 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView.setLayoutManager(new GridLayoutManager(this, 3));
         recyclerView.setAdapter(adapter);
+    }
+
+    static void parseToJson(List<Pokemon> list){
+
+        Gson gson = new Gson();
+
+        JSONArray jsonArray ;
+
+        try{
+            jsonArray = new JSONArray(list);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            gson.toJson(list, new TypeToken<List<Pokemon>>(){}.getType() , new FileWriter(Environment.getExternalStorageDirectory().toString()+"/file.json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
