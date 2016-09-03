@@ -49,48 +49,14 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
         final Pokemon pokemon = pokemonList.get(position);
         String url = pokemon.url;
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(MainActivity.URL)
-                .addConverterFactory(GsonConverterFactory.create()) // ogarnij za co odpowiadaja konkretne metody i czy sa niezbiedne
-                .build();
-
-        final PokeService pokeService = retrofit.create(PokeService.class);
-
-        String[] parts = url.split("/");
-
-        if(pokemon.sprites == null || pokemon.sprites.isEmpty() || pokemon.image == null){
-
-            pokeService.getPokemon(Integer.valueOf(parts[parts.length -1])).enqueue(new Callback<Pokemon>() {
-                @Override
-                public void onResponse(Call<Pokemon> call, final Response<Pokemon> response) {
-
-                    if (response.body() != null) {
-
-                        pokemon.clone(response.body());
-
-                        holder.pokemonType.setText(pokemon.getPokemonTypes());
-                        holder.pokemonHeight.setText(String.valueOf(pokemon.height));
-                        holder.pokemonWeight.setText(String.valueOf(pokemon.weight));
-
-
-                        new LoadPokemonData(holder.pokemonImage, pokemon).execute(response.body().getDefaultImsgeUrl());
-                    } else {
-                        Log.e(TAG, "Response null or empty.");
-                    }
-                }
-
-
-                @Override
-                public void onFailure(Call<Pokemon> call, Throwable t) {
-                    Log.e(TAG, "Service error. "+t.getLocalizedMessage());
-                }
-            });
-
+        if(pokemon.sprites == null || pokemon.sprites.isEmpty() || pokemon.image == null)
             holder.pokemonImage.setImageResource(R.drawable.ic_launcher);
-        }
-        else{
-            holder.pokemonType.setText(pokemon.getPokemonTypes());
+        else {
+
             holder.pokemonImage.setImageBitmap(pokemon.image);
+            holder.pokemonType.setText(pokemon.getPokemonTypes());
+            holder.pokemonHeight.setText(String.valueOf(pokemon.height));
+            holder.pokemonWeight.setText(String.valueOf(pokemon.weight));
         }
 
         holder.pokemonName.setText(pokemonList.get(position).name.toUpperCase());
@@ -99,6 +65,10 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
     @Override
     public int getItemCount() {
         return this.pokemonList.size();
+    }
+
+    public Pokemon getItem(int position){
+        return pokemonList.get(position);
     }
 
     public class PokemonViewHolder extends RecyclerView.ViewHolder {
@@ -120,39 +90,4 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
         }
     }
 
-    private class LoadPokemonData extends AsyncTask<String,String, Bitmap>{
-
-        ImageView pokemonImage;
-        Pokemon pokemon;
-
-        public LoadPokemonData(ImageView pokemonImage, Pokemon pokemon){
-            this.pokemonImage = pokemonImage;
-            this.pokemon = pokemon;
-        }
-
-        @Override
-        protected Bitmap doInBackground(String... params) {
-
-            Bitmap bitmap = null;
-
-            try {
-                bitmap = BitmapFactory.decodeStream((InputStream) new URL(params[0]).getContent());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return bitmap;
-        }
-
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            super.onPostExecute(bitmap);
-
-            if(pokemonImage != null)
-                pokemonImage.setImageBitmap(bitmap);
-
-            if(pokemon != null)
-                pokemon.image = bitmap;
-        }
-    }
 }

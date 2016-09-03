@@ -11,6 +11,7 @@ import java.util.Map;
  * Created by Mohru on 16.08.2016.
  */
 public class Pokemon {
+    int id;
     String name;
     String url;
     ArrayList<Object> types = new ArrayList<Object>();
@@ -21,6 +22,7 @@ public class Pokemon {
     String type;
 
     void clone(Pokemon pokemon){
+        this.id = pokemon.id;
         this.name = pokemon.name;
         if(this.url == null)
             this.url = pokemon.url;

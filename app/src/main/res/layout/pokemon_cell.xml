@@ -11,8 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         card_view:contentPadding="@dimen/activity_horizontal_margin"
-        android:padding="16dp"
-        card_view:cardCornerRadius="5dp">
+        android:layout_margin="20dp"
+        card_view:cardCornerRadius="10dp">
 
         <LinearLayout
             android:layout_width="match_parent"

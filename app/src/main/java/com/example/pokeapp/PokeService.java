@@ -3,6 +3,7 @@ package com.example.pokeapp;
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Path;
+import rx.Observable;
 
 /**
  * Created by Mohru on 17.08.2016.
@@ -13,5 +14,6 @@ public interface PokeService {
     Call<PokeResponse> getPokemons();
 
     @GET("pokemon/{id}/")
-    Call<Pokemon> getPokemon(@Path("id") int pokemonId);
+    //Call<Pokemon> getPokemon(@Path("id") int pokemonId);
+    Observable<Pokemon> getPokemon(@Path("id") int pokemonId);
 }
