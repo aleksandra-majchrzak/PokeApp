@@ -75,40 +75,6 @@ public class MainActivity extends AppCompatActivity {
 
                     prepareRecyclerView(response.body().results);
 
-                    // callback call fot pokemon
-                    /*
-                    for(Pokemon pokemon : response.body().results) {
-
-                        if (pokemon.sprites == null || pokemon.sprites.isEmpty() || pokemon.image == null) {
-
-                            String url = pokemon.url;
-                            String[] parts = url.split("/");
-
-                            pokeService.getPokemon(Integer.valueOf(parts[parts.length -1])).enqueue(new Callback<Pokemon>() {
-                                @Override
-                                public void onResponse(Call<Pokemon> call, final Response<Pokemon> innerResponse) {
-
-                                    if (innerResponse.body() != null) {
-
-                                        Pokemon old = ((PokemonAdapter)recyclerView.getAdapter()).getItem(innerResponse.body().id -1);
-                                        old.clone(innerResponse.body());
-
-                                        new LoadPokemonData(old).execute(old.getDefaultImsgeUrl());
-                                        recyclerView.getAdapter().notifyDataSetChanged();
-                                    } else {
-                                        Log.e(TAG, "Response null or empty.");
-                                    }
-                                }
-
-
-                                @Override
-                                public void onFailure(Call<Pokemon> call, Throwable t) {
-                                    Log.e(TAG, "Service error. " + t.getLocalizedMessage());
-                                }
-                            });
-                        }
-                    }*/
-
                     Retrofit innerRetrofit = new Retrofit.Builder()
                             .baseUrl(mURL)
                             .addConverterFactory(GsonConverterFactory.create()) // ogarnij za co odpowiadaja konkretne metody i czy sa niezbiedne
@@ -182,10 +148,7 @@ public class MainActivity extends AppCompatActivity {
 
                                     @Override
                                     public final void onNext(Pokemon response) {
-                                        //adapter.addData(response);
-                                //        Pokemon old = ((PokemonAdapter)recyclerView.getAdapter()).getItem(response.id -1);
-                                //        old.clone(response);
-             //                           new LoadPokemonData(old).execute(old.getDefaultImsgeUrl());
+
                                         recyclerView.getAdapter().notifyDataSetChanged();
                                     }
                                 });
@@ -212,38 +175,5 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView.setLayoutManager(new GridLayoutManager(this, 3));
         recyclerView.setAdapter(adapter);
-    }
-
-    private class LoadPokemonData extends AsyncTask<String,String, Bitmap> {
-
-        Pokemon pokemon;
-
-        public LoadPokemonData(Pokemon pokemon){
-            this.pokemon = pokemon;
-        }
-
-        @Override
-        protected Bitmap doInBackground(String... params) {
-
-            Bitmap bitmap = null;
-
-            try {
-                bitmap = BitmapFactory.decodeStream((InputStream) new URL(params[0]).getContent());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            return bitmap;
-        }
-
-        @Override
-        protected void onPostExecute(Bitmap bitmap) {
-            super.onPostExecute(bitmap);
-
-            if(pokemon != null)
-                pokemon.image = bitmap;
-
-            recyclerView.getAdapter().notifyDataSetChanged();
-        }
     }
 }
