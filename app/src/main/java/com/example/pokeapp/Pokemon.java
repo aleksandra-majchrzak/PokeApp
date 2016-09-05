@@ -13,19 +13,15 @@ import java.util.Map;
 public class Pokemon {
     int id;
     String name;
-    String url;
     ArrayList<Object> types = new ArrayList<Object>();
     int height;
     int weight;
     Map<String , Object> sprites = new HashMap<String , Object>();
     Bitmap image;
-    String type;
 
     void clone(Pokemon pokemon){
         this.id = pokemon.id;
         this.name = pokemon.name;
-        if(this.url == null)
-            this.url = pokemon.url;
         this.types = pokemon.types;
         this.height = pokemon.height;
         this.weight = pokemon.weight;
@@ -33,7 +29,7 @@ public class Pokemon {
         this.image = pokemon.image;
     }
 
-    String getDefaultImsgeUrl(){
+    String getDefaultImageUrl(){
         return this.sprites.get("front_default").toString();
     }
 
