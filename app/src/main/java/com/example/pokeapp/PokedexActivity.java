@@ -2,8 +2,8 @@ package com.example.pokeapp;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -31,6 +31,7 @@ public class PokedexActivity extends AppCompatActivity {
     Button getPokemonsButton;
 
     public static final String TAG = "POKEAPP";
+    private boolean isListShown = false;
     //public static final String mURL = "http://pokeapi.co/api/v2/";
 
     @Override
@@ -48,66 +49,82 @@ public class PokedexActivity extends AppCompatActivity {
             }
         });
 
+        if (savedInstanceState != null) {
+            isListShown = savedInstanceState.getBoolean("isListShown", false);
+
+            if (isListShown)
+                prepare();
+        }
+
     }
 
-    private void prepare(){
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putBoolean("isListShown", isListShown);
+    }
+
+    private void prepare() {
 
         List<Pokemon> pokemons = getPokemons();
 
+        isListShown = true;
+
         prepareRecyclerView(pokemons);
 
-        for(Pokemon pokemon : pokemons) {
+        for (Pokemon pokemon : pokemons) {
 
             Observable.just(pokemon)
-                .flatMap(new Func1<Pokemon, Observable<Pokemon>>() {
-                    @Override
-                    public Observable<Pokemon> call(Pokemon pokemon) {
+                    .flatMap(new Func1<Pokemon, Observable<Pokemon>>() {
+                        @Override
+                        public Observable<Pokemon> call(Pokemon pokemon) {
 
-                        Bitmap bitmap = null;
+                            Bitmap bitmap = null;
 
-                        try {
-                            InputStream ioStream = getAssets().open("sprites/" + pokemon.id + ".png");
-                            bitmap = BitmapFactory.decodeStream(ioStream);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                            try {
+                                InputStream ioStream = getAssets().open("sprites/" + pokemon.id + ".png");
+                                bitmap = BitmapFactory.decodeStream(ioStream);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                            Pokemon old = ((PokemonAdapter) recyclerView.getAdapter()).getItem(pokemon.id - 1);
+                            old.image = bitmap;
+
+                            return Observable.just(pokemon);
+                        }
+                    })
+                    .subscribeOn(Schedulers.newThread())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(new Subscriber<Pokemon>() {
+                        @Override
+                        public final void onCompleted() {
+                            // do nothing
                         }
 
-                        Pokemon old = ((PokemonAdapter)recyclerView.getAdapter()).getItem(pokemon.id -1);
-                        old.image = bitmap;
-
-                        return Observable.just(pokemon);
-                    }
-                })
-                .subscribeOn(Schedulers.newThread())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Subscriber<Pokemon>() {
-                    @Override
-                    public final void onCompleted() {
-                        // do nothing
-                    }
-
-                    @Override
-                    public final void onError(Throwable e) {
-                        try {
-                            if(e != null && e.getMessage() != null)
-                                Log.e(TAG, e.getMessage());
-                            else
-                                Log.e(TAG, "e or message is null");
-                        } catch (Exception e1) {
-                            e1.printStackTrace();
+                        @Override
+                        public final void onError(Throwable e) {
+                            try {
+                                if (e != null && e.getMessage() != null)
+                                    Log.e(TAG, e.getMessage());
+                                else
+                                    Log.e(TAG, "e or message is null");
+                            } catch (Exception e1) {
+                                e1.printStackTrace();
+                            }
                         }
-                    }
 
-                    @Override
-                    public final void onNext(Pokemon response) {
+                        @Override
+                        public final void onNext(Pokemon response) {
 
-                        recyclerView.getAdapter().notifyDataSetChanged();
-                    }
-                });
+                            recyclerView.getAdapter().notifyDataSetChanged();
+                        }
+                    });
         }
     }
 
-    private void prepareRecyclerView(List<Pokemon> pokemonList){
+    private void prepareRecyclerView(List<Pokemon> pokemonList) {
         PokemonAdapter adapter = new PokemonAdapter(pokemonList);
 
         final GridLayoutManager mLayoutManager = new GridLayoutManager(this, 3);
@@ -124,7 +141,7 @@ public class PokedexActivity extends AppCompatActivity {
                         int viewWidth = recyclerView.getMeasuredWidth();
                         float cardViewWidth = getResources().getDimension(R.dimen.cell_width);
 
-                        if(cardViewWidth > 0){  // -2 == wrap_content for big screens
+                        if (cardViewWidth > 0) {  // -2 == wrap_content for big screens
                             cardViewWidth += getResources().getDimension(R.dimen.cell_margin);
 
                             int newSpanCount = (int) Math.floor(viewWidth / cardViewWidth);
@@ -136,14 +153,15 @@ public class PokedexActivity extends AppCompatActivity {
                 });
     }
 
-    private List<Pokemon> getPokemons(){
+    private List<Pokemon> getPokemons() {
 
         Gson gson = new Gson();
         List<Pokemon> pokemons = null;
 
         try {
             pokemons = gson.fromJson(new InputStreamReader(getAssets().open("pokemons.json")),
-                    new TypeToken<List<Pokemon>>(){}.getType());
+                    new TypeToken<List<Pokemon>>() {
+                    }.getType());
         } catch (IOException e) {
             e.printStackTrace();
         }
