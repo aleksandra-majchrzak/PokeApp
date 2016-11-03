@@ -159,9 +159,11 @@ public class PokedexActivity extends AppCompatActivity {
         List<Pokemon> pokemons = null;
 
         try {
-            pokemons = gson.fromJson(new InputStreamReader(getAssets().open("pokemons.json")),
-                    new TypeToken<List<Pokemon>>() {
-                    }.getType());
+            InputStreamReader reader = new InputStreamReader(getAssets().open("pokemons.json"));
+            pokemons = gson.fromJson(reader, new TypeToken<List<Pokemon>>() {
+            }.getType());
+
+            reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
