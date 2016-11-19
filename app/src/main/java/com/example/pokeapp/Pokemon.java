@@ -37,7 +37,7 @@ public class Pokemon {
         String[] types = new String[this.types.size()];
 
         for(int i = 0; i< types.length; ++i){
-            types[i] = ((Map<String , Map<String , String>>)this.types.get(i)).get("type").get("name");
+            types[i] = ((Map<String , Map<String , String>>)this.types.get(i) ).get("type").get("name");
         }
 
         return TextUtils.join("/", types);

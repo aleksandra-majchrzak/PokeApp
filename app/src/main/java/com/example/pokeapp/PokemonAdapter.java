@@ -16,13 +16,18 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
 
     private List<Pokemon> pokemonList;
 
-    public PokemonAdapter(List<Pokemon> pokemonList){
+    public PokemonAdapter(List<Pokemon> pokemonList) {
         this.pokemonList = pokemonList;
+    }
+
+    public List<Pokemon> getPokemonList() {
+        return pokemonList;
     }
 
     @Override
     public PokemonViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.pokemon_cell, parent, false);
+
         return new PokemonViewHolder(view);
     }
 
@@ -31,7 +36,7 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
 
         final Pokemon pokemon = pokemonList.get(position);
 
-        if(pokemon.sprites == null || pokemon.sprites.isEmpty() || pokemon.image == null)
+        if (pokemon.sprites == null || pokemon.sprites.isEmpty() || pokemon.image == null)
             holder.pokemonImage.setImageResource(R.drawable.ic_launcher);
         else {
 
@@ -49,7 +54,7 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
         return this.pokemonList.size();
     }
 
-    public Pokemon getItem(int position){
+    public Pokemon getItem(int position) {
         return pokemonList.get(position);
     }
 
@@ -64,7 +69,7 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
         public PokemonViewHolder(View itemView) {
             super(itemView);
 
-            pokemonImage = ((ImageView)itemView.findViewById(R.id.pokemon_imageView));
+            pokemonImage = ((ImageView) itemView.findViewById(R.id.pokemon_imageView));
             pokemonName = (TextView) itemView.findViewById(R.id.pokemon_name_textView);
             pokemonType = (TextView) itemView.findViewById(R.id.poke_type_textView);
             pokemonHeight = (TextView) itemView.findViewById(R.id.poke_height_textView);

@@ -2,11 +2,12 @@ package com.example.pokeapp;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
@@ -17,13 +18,8 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
-
-import rx.Observable;
-import rx.Subscriber;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Func1;
-import rx.schedulers.Schedulers;
 
 public class PokedexActivity extends AppCompatActivity {
 
@@ -32,6 +28,7 @@ public class PokedexActivity extends AppCompatActivity {
 
     public static final String TAG = "POKEAPP";
     private boolean isListShown = false;
+    Parcelable savedRecyclerLayoutState;
     //public static final String mURL = "http://pokeapi.co/api/v2/";
 
     @Override
@@ -50,12 +47,12 @@ public class PokedexActivity extends AppCompatActivity {
         });
 
         if (savedInstanceState != null) {
+            savedRecyclerLayoutState = savedInstanceState.getParcelable("BUNDLE_RECYCLER_LAYOUT");
             isListShown = savedInstanceState.getBoolean("isListShown", false);
 
             if (isListShown)
                 prepare();
         }
-
     }
 
     @Override
@@ -63,65 +60,20 @@ public class PokedexActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
 
         outState.putBoolean("isListShown", isListShown);
+        // to save current list visible position
+        outState.putParcelable("BUNDLE_RECYCLER_LAYOUT", recyclerView.getLayoutManager().onSaveInstanceState());
     }
 
     private void prepare() {
 
-        List<Pokemon> pokemons = getPokemons();
+        List<Pokemon> pokemons = new ArrayList();
 
         isListShown = true;
 
         prepareRecyclerView(pokemons);
 
-        for (Pokemon pokemon : pokemons) {
-
-            Observable.just(pokemon)
-                    .flatMap(new Func1<Pokemon, Observable<Pokemon>>() {
-                        @Override
-                        public Observable<Pokemon> call(Pokemon pokemon) {
-
-                            Bitmap bitmap = null;
-
-                            try {
-                                InputStream ioStream = getAssets().open("sprites/" + pokemon.id + ".png");
-                                bitmap = BitmapFactory.decodeStream(ioStream);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-
-                            Pokemon old = ((PokemonAdapter) recyclerView.getAdapter()).getItem(pokemon.id - 1);
-                            old.image = bitmap;
-
-                            return Observable.just(pokemon);
-                        }
-                    })
-                    .subscribeOn(Schedulers.newThread())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(new Subscriber<Pokemon>() {
-                        @Override
-                        public final void onCompleted() {
-                            // do nothing
-                        }
-
-                        @Override
-                        public final void onError(Throwable e) {
-                            try {
-                                if (e != null && e.getMessage() != null)
-                                    Log.e(TAG, e.getMessage());
-                                else
-                                    Log.e(TAG, "e or message is null");
-                            } catch (Exception e1) {
-                                e1.printStackTrace();
-                            }
-                        }
-
-                        @Override
-                        public final void onNext(Pokemon response) {
-
-                            recyclerView.getAdapter().notifyDataSetChanged();
-                        }
-                    });
-        }
+        LoadPokemonsAsyncTask loadTask = new LoadPokemonsAsyncTask();
+        loadTask.execute();
     }
 
     private void prepareRecyclerView(List<Pokemon> pokemonList) {
@@ -132,7 +84,7 @@ public class PokedexActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
 
-        // optional
+        // optional - to dynamically change number of columns due to screen size
         recyclerView.getViewTreeObserver().addOnGlobalLayoutListener(
                 new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
@@ -153,21 +105,56 @@ public class PokedexActivity extends AppCompatActivity {
                 });
     }
 
-    private List<Pokemon> getPokemons() {
+    class LoadPokemonsAsyncTask extends AsyncTask<Void, Pokemon, Void> {
 
-        Gson gson = new Gson();
-        List<Pokemon> pokemons = null;
+        @Override
+        protected Void doInBackground(Void... voids) {
 
-        try {
-            InputStreamReader reader = new InputStreamReader(getAssets().open("pokemons.json"));
-            pokemons = gson.fromJson(reader, new TypeToken<List<Pokemon>>() {
-            }.getType());
+            Gson gson = new Gson();
+            List<Pokemon> pokemons = null;
 
-            reader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                InputStreamReader reader = new InputStreamReader(getAssets().open("pokemons.json"));
+                pokemons = gson.fromJson(reader, new TypeToken<List<Pokemon>>() {
+                }.getType());
+
+                reader.close();
+
+                for (Pokemon pokemon : pokemons) {
+                    Bitmap bitmap = null;
+
+                    try {
+                        InputStream ioStream = getAssets().open("sprites/" + pokemon.id + ".png");
+                        bitmap = BitmapFactory.decodeStream(ioStream);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    pokemon.image = bitmap;
+
+                    publishProgress(pokemon);
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            return null;
         }
 
-        return pokemons;
+        @Override
+        protected void onProgressUpdate(Pokemon... values) {
+            super.onProgressUpdate(values);
+
+            ((PokemonAdapter) recyclerView.getAdapter()).getPokemonList().add(values[0]);
+            recyclerView.getAdapter().notifyDataSetChanged();
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+
+            if (savedRecyclerLayoutState != null)
+                recyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
+        }
     }
 }
